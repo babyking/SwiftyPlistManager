@@ -35,7 +35,7 @@ struct Plist {
   
   var destPath:String? {
     guard sourcePath != .none else { return .none }
-    let dir = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+    let dir = NSSearchPathForDirectoriesInDomains(.libraryDirectory, .userDomainMask, true)[0]
     return (dir as NSString).appendingPathComponent("\(name).plist")
   }
   
@@ -300,6 +300,14 @@ public class SwiftyPlistManager {
         return value
         
     }
+
+    public func fetchAllValues(fromPlistWithName: String) -> Any? {
+        guard let plist = Plist(name: fromPlistWithName), let dict = plist.getMutablePlistFile() else {
+            plistManagerPrint("Unable to get '\(fromPlistWithName).plist'")
+            return nil
+        }
+        return dict
+    }
   
     public func getValue(for key: String, fromPlistWithName: String, completion:(_ result : Any?, _ error :SwiftyPlistManagerError?) -> ()) {
         
@@ -320,8 +328,19 @@ public class SwiftyPlistManager {
         completion(value, nil)
         
     }
+
+    public func getAllValues(fromPlistWithName: String, completion:(_ result : Any?, _ error :SwiftyPlistManagerError?) -> ()) {
+        guard let plist = Plist(name: fromPlistWithName),
+              let dict = plist.getMutablePlistFile() else {
+          plistManagerPrint("Unable to get '\(fromPlistWithName).plist'")
+          completion(nil, .fileUnavailable)
+          return
+        }
+        plistManagerPrint("Sending value to completion handler: \(dict)")
+        completion(dict, nil)
+    }
   
-    func keyAlreadyExists(key: String, inPlistWithName: String) -> Bool {
+    public func keyAlreadyExists(key: String, inPlistWithName: String) -> Bool {
         
         guard let plist = Plist(name: inPlistWithName),
             let dict = plist.getMutablePlistFile() else { return false }
